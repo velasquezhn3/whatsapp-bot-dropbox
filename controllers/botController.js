@@ -318,58 +318,60 @@ async function iniciarBot() {
       mobile: false
     });
 
-    bot.ev.on('connection.update', (update) => {
-if (update.qr) {
-  console.log('QR code event received');
-  console.log('QR code received, scan please:');
-  qrcodeTerminal.generate(update.qr, { small: true });
+bot.ev.on('connection.update', (update) => {
+  console.log('Connection update event:', JSON.stringify(update, null, 2));
+  if (update.qr) {
+    console.log('QR code event received');
+    console.log('QR code received, scan please:');
+    qrcodeTerminal.generate(update.qr, { small: true });
 
-  // Generate QR code string and save to file for Railway environment
-  qrcodeTerminal.generate(update.qr, { small: true }, (qrString) => {
-    const qrFilePath = path.join(dataDir, 'qr_code.txt');
-    fs.writeFile(qrFilePath, qrString, (err) => {
-      if (err) {
-        console.error('Error saving QR code to file:', err);
-      } else {
-        console.log(`QR code saved to file: ${qrFilePath}`);
-      }
-    });
-  });
-
-  // Generate QR code PNG file and log data URL
-  const qrPngPath = path.join(dataDir, 'qr_code.png');
-  qrcode.toFile(qrPngPath, update.qr, { type: 'png' }, (err) => {
-    if (err) {
-      console.error('Error generating QR code PNG:', err);
-    } else {
-      console.log(`QR code PNG saved to file: ${qrPngPath}`);
-    }
-  });
-
-  qrcode.toDataURL(update.qr, (err, url) => {
-    if (err) {
-      console.error('Error generating QR code data URL:', err);
-    } else {
-      console.log('QR code data URL:', url);
-    }
-  });
-}
-      if (update.connection) {
-        console.log('Connection update:', update.connection);
-      }
-      if (update.lastDisconnect) {
-        const statusCode = update.lastDisconnect.error?.output?.statusCode || update.lastDisconnect.statusCode;
-        console.log('Last disconnect status code:', statusCode);
-        if (statusCode === 401) {
-          console.log('Unauthorized, deleting session and restarting...');
-          // Optionally delete session files here
+    // Generate QR code string and save to file for Railway environment
+    qrcodeTerminal.generate(update.qr, { small: true }, (qrString) => {
+      const qrFilePath = path.join(dataDir, 'qr_code.txt');
+      fs.writeFile(qrFilePath, qrString, (err) => {
+        if (err) {
+          console.error('Error saving QR code to file:', err);
+        } else {
+          console.log(`QR code saved to file: ${qrFilePath}`);
         }
-      }
-      if (update.connection === 'close') {
-        console.log('Connection closed, restarting bot in 3 seconds...');
-        setTimeout(iniciarBot, 3000);
+      });
+    });
+
+    // Generate QR code PNG file and log data URL
+    const qrPngPath = path.join(dataDir, 'qr_code.png');
+    qrcode.toFile(qrPngPath, update.qr, { type: 'png' }, (err) => {
+      if (err) {
+        console.error('Error generating QR code PNG:', err);
+      } else {
+        console.log(`QR code PNG saved to file: ${qrPngPath}`);
       }
     });
+
+    qrcode.toDataURL(update.qr, (err, url) => {
+      if (err) {
+        console.error('Error generating QR code data URL:', err);
+      } else {
+        console.log('QR code data URL:', url);
+      }
+    });
+  }
+  if (update.connection) {
+    console.log('Connection update:', update.connection);
+  }
+  if (update.lastDisconnect) {
+    console.log('Last disconnect info:', JSON.stringify(update.lastDisconnect, null, 2));
+    const statusCode = update.lastDisconnect.error?.output?.statusCode || update.lastDisconnect.statusCode;
+    console.log('Last disconnect status code:', statusCode);
+    if (statusCode === 401) {
+      console.log('Unauthorized, deleting session and restarting...');
+      // Optionally delete session files here
+    }
+  }
+  if (update.connection === 'close') {
+    console.log('Connection closed, restarting bot in 3 seconds...');
+    setTimeout(iniciarBot, 3000);
+  }
+});
 
     bot.ev.on('creds.update', saveCreds);
 
