@@ -3,8 +3,6 @@ const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
 const { Dropbox } = require('dropbox');
-const fetch = require('node-fetch');
-
 const DROPBOX_ACCESS_TOKEN = process.env.DROPBOX_ACCESS_TOKEN;
 
 if (!DROPBOX_ACCESS_TOKEN) {
@@ -12,7 +10,17 @@ if (!DROPBOX_ACCESS_TOKEN) {
   process.exit(1);
 }
 
-const dbx = new Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN, fetch });
+let dbx = null;
+
+async function getDropboxInstance() {
+  if (dbx) {
+    return dbx;
+  }
+  const fetchModule = await import('node-fetch');
+  const fetch = fetchModule.default;
+  dbx = new Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN, fetch });
+  return dbx;
+}
 
 const cacheDir = path.join(os.tmpdir(), 'ijcvwabot_dropbox_cache');
 
@@ -54,6 +62,7 @@ async function downloadFile(dropboxPath) {
     try {
       const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
       // Get current metadata from Dropbox to check if file changed
+      const dbx = await getDropboxInstance();
       const currentMeta = await dbx.filesGetMetadata({ path: dropboxPath });
       if (currentMeta.rev === meta.rev) {
         // File unchanged, return cached path
@@ -67,6 +76,7 @@ async function downloadFile(dropboxPath) {
 
   // Download file from Dropbox
   try {
+    const dbx = await getDropboxInstance();
     const response = await dbx.filesDownload({ path: dropboxPath });
     const fileBinary = response.result.fileBinary || response.result.fileBlob || response.result.fileBinary;
 

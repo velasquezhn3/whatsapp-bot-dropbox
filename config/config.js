@@ -1,3 +1,5 @@
+const path = require('path');
+
 /**
  * Configuración general y rutas de archivos.
  */
