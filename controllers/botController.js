@@ -362,10 +362,20 @@ bot.ev.on('connection.update', (update) => {
     console.log('Last disconnect info:', JSON.stringify(update.lastDisconnect, null, 2));
     const statusCode = update.lastDisconnect.error?.output?.statusCode || update.lastDisconnect.statusCode;
     console.log('Last disconnect status code:', statusCode);
-    if (statusCode === 401) {
-      console.log('Unauthorized, deleting session and restarting...');
-      // Optionally delete session files here
+if (statusCode === 401) {
+  console.log('Unauthorized, deleting session and restarting...');
+  // Delete session files to force re-authentication
+  const sessionPath = path.join(dataDir, 'session');
+  fs.rm(sessionPath, { recursive: true, force: true }, (err) => {
+    if (err) {
+      console.error('Error deleting session files:', err);
+    } else {
+      console.log('Session files deleted successfully.');
     }
+    setTimeout(iniciarBot, 3000);
+  });
+  return; // Prevent further restart until deletion completes
+}
   }
   if (update.connection === 'close') {
     console.log('Connection closed, restarting bot in 3 seconds...');
