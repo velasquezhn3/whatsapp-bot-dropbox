@@ -61,6 +61,13 @@ async function enviarMenuPrincipal(bot, remitente) {
  * @param {Object} estudiante - Información del estudiante.
  */
 async function enviarEstadoPagos(bot, remitente, estudiante) {
+  if (!estudiante || !estudiante.nombre) {
+    await bot.sendMessage(remitente, {
+      text: '❌ No se encontró información del alumno. Por favor contacte a administración.'
+    });
+    return;
+  }
+
   const deuda = calcularDeuda(estudiante);
   // Define ordered months array in lowercase
   const mesesOrdenados = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
